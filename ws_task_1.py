@@ -29,5 +29,5 @@ handle.close()
 # Write list of publications to gene_list.txt file
 with open("gene_list.txt","w") as file:
 	for paper in paper_list:
-		file.write("{}\n".format(paper))
+		file.write("{}\n".format(paper.strip("'").strip('"')))
 file.close()
