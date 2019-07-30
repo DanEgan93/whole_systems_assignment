@@ -27,7 +27,11 @@ for sub_record in sufu_details:
 handle.close()
 
 # Write list of publications to gene_list.txt file
-with open("gene_list.txt","w") as file:
+with open("paper_list.txt","w") as file:
 	for paper in paper_list:
 		file.write("{}\n".format(paper.strip("'").strip('"')))
 file.close()
+
+
+
+
