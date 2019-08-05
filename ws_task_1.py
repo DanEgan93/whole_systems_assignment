@@ -12,7 +12,12 @@ from Bio import Entrez
 
 Entrez.email = "dan_egan@live.co.uk"
 
-# esearch- returns a list of ids for a pubmed search.
+'''
+The esearch function from the Enzrez API has been used used to return the
+pubmed IDs (max 1000) of all entries in the database which include the
+term 'SUFU AND gene'.
+
+'''
 handle = Entrez.esearch(
 	db='pubmed',
 	retmax= '100000',
@@ -20,19 +25,34 @@ handle = Entrez.esearch(
 	term='SUFU AND gene'
 	)
 data = Entrez.read(handle)
+# Extacting the PubMed ids only
 sufu_list = data['IdList']
 handle.close()
 
-# esummary-returns information (inc title) regarding the PubMed IDs provided.
+''' 
+Joining the list of PubMed ids into a string (required for the Entrez
+esummary function)
+'''
 sufu_list_query = ",".join(map(str,sufu_list))
 
 paper_list = []
+
+'''
+The esummary function will return summary information for all PubMed IDs passed
+in the sufu_list_query. This includes paper details e.g. title, 
+year of publication, authors... 
+'''
+
 handle = Entrez.esummary(db='pubmed', id=sufu_list_query, retmode='xml')
 sufu_details = Entrez.read(handle)
 
 sufu_paper_details = {}
 
-
+'''
+Iterating through sufu_details, a list of dictionaries. Each dictionary or 'record' has a
+series of information about a single paper. These are accesed e.g. record['title']
+and are added to a new dictionary, sufu_paper_details.
+'''
 for record in sufu_details:
 	# create comma separated list of authors
 	author_list = [] 
@@ -53,7 +73,10 @@ for record in sufu_details:
 		}}
 	)
 
-# Write list of publications to gene_list.txt file
+'''
+A text file, paper_list.txt, is created and a header is added.
+Each item from the sufu_paper_details is then added to the text file.
+'''
 with open("paper_list.txt","w") as file:
 	# Creating header
 	file.write("{}\t{}\t{}\t{}\t{}\n".format(
@@ -63,7 +86,7 @@ with open("paper_list.txt","w") as file:
 				'Journal',
 				'Pages')
 			)
-	# Adding 
+	# Adding paper information
 	for k, v in sufu_paper_details.items():
 		file.write("{}\t{}\t{}\t{}\t{}\n".format(
 			v['Title'],
@@ -73,3 +96,5 @@ with open("paper_list.txt","w") as file:
 			v['Pages'])
 		)
 file.close()
+
+
