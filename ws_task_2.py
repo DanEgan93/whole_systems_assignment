@@ -36,5 +36,10 @@ for k,v in sufu_details.items():
 			for g in i:
 				list_of_genes.append(g['Name'].encode('UTF-8'))
 
-if 'SUFU' in list_of_genes:
-	print(list_of_genes.index('SUFU'))
+#comparing list of genes from entrez and string
+
+
+#Adding genes in list to text file
+with open('entrez_gene_list.txt', 'w') as file:
+	for gene in list_of_genes:
+		file.write(gene+'\n')
