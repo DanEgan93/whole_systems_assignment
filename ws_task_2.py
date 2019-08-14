@@ -51,6 +51,7 @@ string_list_of_genes = []
 gene_list_overlap = []
 unique_to_string = []
 unique_to_entrez = []
+genes_to_remove = []
 
 ''' Esummary function returns gene associated data in the 
 dict_1(dict_2(list_of_dict(dict_3))) format. The for loop below itterates
@@ -89,10 +90,16 @@ for gene in string_list_of_genes:
 	else:
 		unique_to_string.append(gene)
 
+# Identification and removal of hypothetical genes and miRNA genes.
 for gene in entrez_list_of_genes:
+	if '_' in gene or 'MIR' in gene:
+		genes_to_remove.append(gene)
 	gene = gene.strip(' ')
 	if gene not in string_list_of_genes:
 		unique_to_entrez.append(gene)
+
+for gene in genes_to_remove:
+	entrez_list_of_genes.remove(gene)
 
 # The list of genes identified from the Entrez database is written to a file
 with open('entrez_gene_list.txt', 'w') as file:
@@ -105,8 +112,6 @@ with open('gene_list_comparison.txt', 'w') as file:
 	file.write('Entrez = {} \n'.format(len(entrez_list_of_genes)))
 	file.write('String = {} \n'.format(len(string_list_of_genes)))
 	file.write('Number of overlapping genes = {} \n'.format(len(gene_list_overlap)))
-	file.write('Number of unique genes (string and entrez)\
-	 = {} \n'.format(len(unique_to_entrez+unique_to_string)))
 	file.write('\n\n')
 	file.write('Entrez gene list: \n')
 	for gene in entrez_list_of_genes:
