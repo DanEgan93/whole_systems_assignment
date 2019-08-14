@@ -53,12 +53,43 @@ entrez_list_of_genes = set(entrez_list_of_genes)
 
 # Compating lists of genes
 gene_list_overlap = []
-gene_list_non_overlap = []
+unique_to_string = []
+unique_to_entrez = []
 
-print(len(entrez_list_of_genes))
-print(len(string_list_of_genes))
+# creating a list of overlap and 
+for gene in string_list_of_genes:
+	if gene in entrez_list_of_genes:
+		gene_list_overlap.append(gene)
+	else:
+		unique_to_string.append(gene)
+
+
+# unique to entrez
+for gene in entrez_list_of_genes:
+	gene = gene.strip(' ')
+	if gene not in string_list_of_genes:
+		unique_to_entrez.append(gene)
 
 #Adding genes in list to text file
 with open('entrez_gene_list.txt', 'w') as file:
 	for gene in entrez_list_of_genes:
 		file.write(gene+'\n')
+
+with open('gene_list_comparison.txt', 'w') as file:
+	file.write('*** Total number of genes comparison *** \n')
+	file.write('Entrez = {} \n'.format(len(entrez_list_of_genes)))
+	file.write('String = {} \n'.format(len(string_list_of_genes)))
+	file.write('Number of overlapping genes = {} \n'.format(len(gene_list_overlap)))
+	file.write('Number of unique genes (string and entrez) = {} \n'.format(len(unique_to_entrez+unique_to_string)))
+	file.write('\n\n')
+	file.write('Entrez gene list: \n')
+	for gene in entrez_list_of_genes:
+		file.write(gene+'\t')
+	file.write('\n\n')
+	file.write('String gene list: \n')
+	for gene in string_list_of_genes:
+		file.write(gene+'\t')
+	file.write('\n\n')
+	file.write('Overlapping genes from both lists:\n')
+	for gene in gene_list_overlap:
+		file.write(gene+'\t')
