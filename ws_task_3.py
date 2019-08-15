@@ -14,6 +14,7 @@
 
 from Bio import Entrez
 import csv
+import re
 
 Entrez.email = 'dan_egan@live.co.uk'
 
@@ -58,43 +59,72 @@ def get_variant_info(database_name, search_term, retmax):
 	handle = Entrez.esummary(db=database_name, id=gene_id_query, retmode='xml')
 	gene_details = Entrez.read(handle)
 	
-	hgvs_list = []
-	pathogenicity_list = []
-	pheno_list = []
-	variant_type_list = []
-
 	clinvar_variant_dict = {}
+	dbsnp_variant_dict = {}
+	var_to_remove_list = []
 	#put it into a dict
 
 	for dict_1_key, dict_1_value in gene_details.items():
 		for dict_2_key, dict_2_value in dict_1_value.items():
+			# dict 2 value is a list of dicts containing individual entries
 			if type(dict_2_value) == list:
-				for list_of_dict_3 in dict_2_value:
-					for dict_4 in list_of_dict_3['variation_set']:
+				# capture different variables from clinvar or dbsnp
+				for dict_3 in dict_2_value:
+					# dict3 contains mutiple dicts
+					for dict_4 in dict_3['variation_set']:
+						if len(dict_4['variation_xrefs']) != 0:
+							for source in dict_4['variation_xrefs']:
+								if source['db_source'] == 'dbSNP':
+									rs_id = source['db_id']
+								else:
+									rs_id = 'NA'
+						else:
+							rs_id = 'NA'
 						hgvs = dict_4['cdna_change']
-						#need to remove non NM's 
 						variant_type = dict_4['variant_type']
-					pathogenicity = list_of_dict_3['clinical_significance']['description']
-					phenotype = list_of_dict_3['trait_set'][0]['trait_name']
-
+					pathogenicity = dict_3['clinical_significance']['description']
+					phenotype = dict_3['trait_set'][0]['trait_name']
 					clinvar_variant_dict.update({hgvs: {
-						'variant_type': variant_type, 
-						'pathogenicity': pathogenicity,
-						'phenotype': phenotype
-						}}
-					)
-					
+					'variant_type': variant_type, 
+					'pathogenicity': pathogenicity,
+					'phenotype': phenotype,
+					'rs_number': 'rs'+str(rs_id)
+					}}
+				)
 
-					# for k,v in list_of_dict_3.items():
-					# 	print(k)
-						# Variant (HGVS)
-						# Clinical_sig
-						# Phenotype
-						# Variant_type
-
+	#create list of variants to remove from the dictionary
+	for variant_key,info_value in clinvar_variant_dict.items():
+		if info_value['rs_number'] == 'rsNA' or 'NM_' not in variant_key:
+			var_to_remove_list.append(variant_key)
+	# remove variants from dictionary
+	for variant in var_to_remove_list:
+		clinvar_variant_dict.pop(variant)
 	return clinvar_variant_dict
 
 
-clinvar_dict = get_variant_info('clinvar', 'SUFU[gene]', '100000')
-print(clinvar_dict)
-# get_variant_info('snp', 'SUFU[gene]','100000')
+gene_dict = {}
+
+
+for gene in string_list_of_genes:
+	term = gene + '[gene]'
+	clinvar_dict = get_variant_info('clinvar', term, '100000')
+	gene_dict.update({gene:clinvar_dict} )	
+
+# writing all to .txt file
+for gene, variant_value in gene_dict.items():
+	with open('{}_snp_list.txt'.format(gene), 'w') as file:
+		file.write("{}\t{}\t{}\t{}\n".format(
+			'Variant',
+			'Variant type',
+			'rs_number',
+			'Pathogenicity'
+			)
+		)
+		for variant_key,variant_details in variant_value.items():
+				file.write("{}\t{}\t{}\t{}\n".format(
+				variant_key,
+				variant_details['variant_type'],
+				variant_details['rs_number'],
+				variant_details['pathogenicity']
+				)	
+			)
