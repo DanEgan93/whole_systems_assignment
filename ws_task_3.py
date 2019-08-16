@@ -67,8 +67,8 @@ def get_variant_info(database_name, search_term, retmax):
 	'''
 	Esummary function returns gene associated data in the 
 	dict_1(dict_2(list_of_dicts(dict_3(dict_4)))) format. The for loop below itterates
-	through this structure to extract the gene name for each gene returned from
-	the search term described above. 
+	through this structure to extract SNP information for each gene returned from
+	the search term passed to the get_variant_info function. 
 
 	'''
 	for dict_1_key, dict_1_value in gene_details.items():
