@@ -25,8 +25,8 @@ Entrez.email = 'dan_egan@live.co.uk'
 
 def get_omim_code(database_name, term, retmax, disease_search_term):
 	'''
-	The get_omim_code functions uses Entrez's esearch method to returns the
-	number id of omim entries linked to the term 'Meier-Gorlin Syndrome' and 
+	The get_omim_code functions uses Entrez's esearch method to return the
+	ids of omim entries linked to the term 'Meier-Gorlin Syndrome' and 
 	collects the omim code for the MEIER-GORLIN SYNDROME 1; MGORS1 term only.
 	See above for description. 
 
