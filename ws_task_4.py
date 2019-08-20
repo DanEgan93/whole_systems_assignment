@@ -10,9 +10,9 @@
 	4) Crate a list of all SNPs in ClinVar related Meir-Gorlin Syndrome and write this
 	to a text file.
 	
-	Note- For this assignment I have chosen the MEIER-GORLIN SYNDROME 1 
-	the reason for this is that there are many types of the sydrome with
-	each displaying slightly different phenotypes and tyoe 1 is the most
+	Note- For this assignment I have chosen the MEIER-GORLIN SYNDROME 1.
+	The reason for this is that there are many types of the sydrome with
+	each displaying slightly different phenotypes and type 1 is the most
 	common version of the syndrome.
 
 '''
@@ -24,6 +24,14 @@ Entrez.email = 'dan_egan@live.co.uk'
 
 
 def get_omim_code(database_name, term, retmax, disease_search_term):
+	'''
+	The get_omim_code functions uses Entrez's esearch method to returns the
+	number id of omim entries linked to the term 'Meier-Gorlin Syndrome' and 
+	collects the omim code for the MEIER-GORLIN SYNDROME 1; MGORS1 term only.
+	See above for description. 
+
+	'''
+
 	handle = Entrez.esearch(db =database_name, term=term, retmax=retmax)
 	data = Entrez.read(handle)
 
@@ -39,14 +47,18 @@ def get_omim_code(database_name, term, retmax, disease_search_term):
 	return omim_code
 
 def get_omim_linked_papers(db, dbfrom, omim_id):
-
+	'''
+	This function uses Entrez's elink method to return the pubmed IDs of
+	papers associated with the omim code passed to this function. The esummary
+	method is then used to retrieve paper details from the IDs provided.
+	'''
 	handle = Entrez.elink(db=db,dbfrom=dbfrom, id=omim_id)
 	record = Entrez.read(handle)
 
 	papers_linked_to_omim_id = []
 
-	for i in record[0]['LinkSetDb'][-1]['Link']:
-		papers_linked_to_omim_id.append(i['Id'])
+	for link in record[0]['LinkSetDb'][-1]['Link']:
+		papers_linked_to_omim_id.append(link['Id'])
 
 	papers_linked_to_omim_id = ",".join(map(str,papers_linked_to_omim_id))
 
@@ -55,11 +67,8 @@ def get_omim_linked_papers(db, dbfrom, omim_id):
 	pubmed_search_id_list = data['IdList']
 
 	pubmed_search_id_list = ",".join(map(str,pubmed_search_id_list))
-
-
 	handle = Entrez.esummary(db='pubmed', id=pubmed_search_id_list, retmax='100000')
 	test_deets = Entrez.read(handle)
-
 
 	gorlin_paper_details = {}
 
@@ -74,7 +83,6 @@ def get_omim_linked_papers(db, dbfrom, omim_id):
 		journal = str(record['FullJournalName'].encode('UTF-8'))
 		pages = str(record['Pages'].encode('UTF-8'))
 
-
 		gorlin_paper_details.update({record['Id']: {
 			'Title': title, 
 			'Pulication_date': year,
@@ -87,8 +95,9 @@ def get_omim_linked_papers(db, dbfrom, omim_id):
 	return gorlin_paper_details
 
 def get_generic_paper_list(db, term, retmax):
-	''' A list of papers that mention the condition Meir-Gorlin syndrome 
-(non-syndrome number specific) '''
+	''' The esearch and esummary methods are used to return a list of papers
+	and paper detailed that mention the condition Meir-Gorlin syndrome 
+	(non-syndrome number specific) '''
 
 	handle = Entrez.esearch(db =db, term=term, retmax=retmax)
 	data = Entrez.read(handle)
@@ -125,12 +134,12 @@ def get_generic_paper_list(db, term, retmax):
 
 def get_variant_info(database_name, search_term, retmax):
 	'''
-	Iterate through list of STRING genes
+	This function does the following:
 		1) Get ids from the ClinVar database using the esearch functions related
-		to search term '*gene_name*[gene]'
-		2) Uses esummary to exract variant info (see desciption above)
-		3) Add info to a dictionary- clinvar_variant_dict
-		4) Return clinvar_variant_dict
+		to search term 'Meier-Gorlin Syndrome'
+		2) Uses esummary to extract variant info 
+		3) Add info to a dictionary-  clinvar_variant_dict
+		4) Returns clinvar_variant_dict
 	'''
 	
 	handle = Entrez.esearch(
@@ -152,14 +161,13 @@ def get_variant_info(database_name, search_term, retmax):
 	dbsnp_variant_dict = {}
 	var_to_remove_list = []
 
+	'''
+	Esummary function returns gene associated data in the 
+	dict_1(dict_2(list_of_dicts(dict_3(dict_4)))) format. The for loop below itterates
+	through this structure to extract SNP information for each gene returned from
+	the search term passed to the get_variant_info function. 
 
-	# '''
-	# Esummary function returns gene associated data in the 
-	# dict_1(dict_2(list_of_dicts(dict_3(dict_4)))) format. The for loop below itterates
-	# through this structure to extract SNP information for each gene returned from
-	# the search term passed to the get_variant_info function. 
-
-	# '''
+	'''
 	for dict_1_key, dict_1_value in clinvar_entry_details.items():
 		for dict_2_key, list_of_dicts in dict_1_value.items():
 			if type(list_of_dicts) == list:
@@ -186,17 +194,16 @@ def get_variant_info(database_name, search_term, retmax):
 				)
 
 
-	# '''Creates a list of variants to remove from the dictionary including non-
-	# SNPs and entries that do not have an rs number associated with them i.e.
-	# the are not present in the dbSNP database.
-	# '''
+	'''Creates a list of variants to remove from the dictionary including non-
+	SNPs and entries that do not have an rs number associated with them i.e.
+	the are not present in the dbSNP database.
+	'''
 	for variant_key,info_value in clinvar_variant_dict.items():
 		if info_value['rs_number'] == 'rsNA' or 'NM_' not in variant_key:
 			var_to_remove_list.append(variant_key)
 	for variant in var_to_remove_list:
 		clinvar_variant_dict.pop(variant)
 	return clinvar_variant_dict
-
 
 
 term = 'Meier-Gorlin Syndrome'
@@ -211,13 +218,12 @@ var_info = get_variant_info(database_name='clinvar', search_term=term, retmax='1
 '''
 The following section writes all information collected in the function above to
 independent text files. The names and content of theses files are as follows:
-	1) 'omim_code.txt'- Code associated with Meier-Gorlin syndrome 1
-	2) 'omim_paper_list.txt'- List of papers in pubmed linked to above omim code
+	1) 'omim_code.txt'- OMIM code associated with Meier-Gorlin syndrome 1.
+	2) 'omim_paper_list.txt'- List of papers in pubmed linked to above OMIM code.
 	3) 'gorlin_generic_search_paper_list.txt'- List of papers in pubmed associated with
-	the generic term 'Meier-Gorlin Syndrome'
-	4) 'meier-Gorlin_SNP_list.txt'- List of SNPS associated with Meier-Gorlin Syndrome
+	the generic term 'Meier-Gorlin Syndrome'.
+	4) 'meier-Gorlin_SNP_list.txt'- List of SNPS associated with Meier-Gorlin Syndrome.
 '''
-
 
 with open('omim_code.txt', 'w') as file:
 	file.write('Disease/condition:{}\n'.format(disease_search_term))
